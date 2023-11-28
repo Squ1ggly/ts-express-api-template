@@ -47,7 +47,7 @@ function main() {
 
   // Fallback redirect
   server.use("/", (req, res, next) => {
-    next("Not a valid route");
+    res.status(400).send("Not a valid route");
     return;
   });
 
