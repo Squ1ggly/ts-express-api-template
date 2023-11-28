@@ -23,6 +23,7 @@ process.on("uncaughtException", (e) => {
 const server = express();
 
 function main() {
+  // Allow from any origin
   server.use(cors());
   server.use((req, res, next) => {
     // Omit code from being logged
