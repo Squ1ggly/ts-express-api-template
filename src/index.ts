@@ -31,13 +31,13 @@ function main() {
   });
 
   const includeRawBodyOptions: bodyParser.Options = {
-    limit: "50mb",
+    limit: "100mb",
     type: "application/json",
     verify: (req: any, res, buf) => {
       // Include rawBody in request, because express removed it in 1.5.1
       // Useful for hashing so its byte for byte.
       req.rawBody = buf;
-    },
+    }
   };
 
   server.use(bodyParser.json(includeRawBodyOptions));
