@@ -3,6 +3,6 @@ import testController from "../controllers/template";
 
 const primaryRouter = Router();
 
-primaryRouter.post("/test", testController);
+primaryRouter.route("/test").post(testController).get(testController);
 
 export default primaryRouter;
