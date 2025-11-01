@@ -1,10 +1,9 @@
-import { NextFunction, Response } from "express";
-import { IAPIRequest } from "../types/api-types";
+import { NextFunction, Response, Request } from "express";
 
-export default function testController(req: IAPIRequest, res: Response, next: NextFunction) {
+export default function testController(req: Request, res: Response, next: NextFunction) {
   try {
-    req.body;
-    req.rawBody;
+    console.log(req.body);
+    console.log(req.raw);
     res.status(200).send("Hello world!");
     return;
   } catch (error) {

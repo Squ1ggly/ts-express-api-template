@@ -5,6 +5,6 @@ export default function errorMiddleware(error: string, req: Request, res: Respon
   if (res.headersSent) {
     return;
   }
-  res.status(500).send();
+  res.sendStatus(500);
   return;
 }

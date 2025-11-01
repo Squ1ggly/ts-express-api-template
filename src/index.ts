@@ -1,6 +1,5 @@
 import express from "express";
 import errorMiddleware from "./middleware/error-middleware";
-import bodyParser from "body-parser";
 import cors from "cors";
 import { config } from "dotenv";
 import assert from "node:assert";
@@ -25,24 +24,22 @@ const server = express();
 function main() {
   // Allow from any origin
   server.use(cors());
-  server.use((req, res, next) => {
+  server.use((req, _res, next) => {
     // Omit code from being logged
     console.info(`${req.method} request received PATH: ${req.originalUrl?.split("?")[0]}`);
     next();
   });
 
-  const includeRawBodyOptions: bodyParser.Options = {
-    limit: "100mb",
-    type: "application/json",
-    verify: (req: any, res, buf) => {
-      // Include rawBody in request, because express removed it in 1.5.1
-      // Useful for hashing so its byte for byte.
-      req.rawBody = buf;
-    }
-  };
-
-  server.use(bodyParser.json(includeRawBodyOptions));
-  server.use(bodyParser.urlencoded({ extended: true }));
+  server.use(
+    express.json({
+      limit: "100mb",
+      type: "application/json",
+      verify: (req, _res, buf, _encoding) => {
+        req.raw = buf;
+      }
+    })
+  );
+  server.use(express.urlencoded({ extended: true }));
 
   server.use("/api", primaryRouter);
 
