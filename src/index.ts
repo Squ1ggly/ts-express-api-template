@@ -1,40 +1,45 @@
 import express from "express";
-import errorMiddleware from "./middleware/error-middleware";
 import cors from "cors";
 import { config } from "dotenv";
-import assert from "node:assert";
+import errorMiddleware from "./middleware/error-middleware";
+import httpLogger from "./middleware/http-logger-middleware";
 import primaryRouter from "./routers/primary-router";
+import logger from "./util/logger";
 
-config();
+config({ path: `.env${process.env.NODE_ENV === "production" ? "" : ".local"}`, quiet: true });
 
-assert(process.env.PORT, ".env must contain PORT");
+const requiredEnvironmentVariables = {
+  PORT: !!process.env.PORT
+};
 
-const PORT = process.env.PORT || 5102;
+console.log("Checking required environment variables...", JSON.stringify(requiredEnvironmentVariables, null, 2));
+
+for (const [key, value] of Object.entries(requiredEnvironmentVariables)) {
+  if (!value) {
+    throw new Error(`Environment variable ${key} is required`);
+  }
+}
+
+const PORT = process.env.PORT;
 
 process.on("uncaughtExceptionMonitor", (e) => {
-  console.error(e);
+  logger.error({ err: e }, "Uncaught exception monitor");
 });
 
 process.on("uncaughtException", (e) => {
-  console.error("Uncaught exception: " + e);
+  logger.fatal({ err: e }, "Uncaught exception");
 });
 
 const server = express();
 
-function main() {
-  // Allow from any origin
+async function main() {
+  logger.info("Starting server...");
   server.use(cors());
-  server.use((req, _res, next) => {
-    // Omit code from being logged
-    console.info(`${req.method} request received PATH: ${req.originalUrl?.split("?")[0]}`);
-    next();
-  });
-
+  server.use(httpLogger);
   server.use(
     express.json({
-      limit: "100mb",
-      type: "application/json",
-      verify: (req, _res, buf, _encoding) => {
+      limit: "1mb",
+      verify: (req, _res, buf) => {
         req.raw = buf;
       }
     })
@@ -43,17 +48,15 @@ function main() {
 
   server.use("/api", primaryRouter);
 
-  // Fallback redirect
-  server.use("/", (req, res, next) => {
-    res.status(400).send("Not a valid route");
-    return;
-  });
-
-  server.listen(PORT, () => {
-    console.info(`Listening on port ${PORT} URL: http://localhost:${PORT}`);
+  server.use((_req, res) => {
+    res.status(404).json({ error: { message: "Not found", code: "NOT_FOUND" } });
   });
 
   server.use(errorMiddleware);
+
+  server.listen(PORT, () => {
+    logger.info({ port: PORT, url: `http://localhost:${PORT}` }, "Server started");
+  });
 }
 
 main();

@@ -1,8 +1,8 @@
 import { Router } from "express";
-import testController from "../controllers/template";
+import healthController from "../controllers/health-controller";
 
 const primaryRouter = Router();
 
-primaryRouter.route("/test").post(testController).get(testController);
+primaryRouter.get("/v1/health", healthController);
 
 export default primaryRouter;
